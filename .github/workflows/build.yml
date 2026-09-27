@@ -17,10 +17,29 @@ jobs:
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
-      - name: Show Solution Configurations
-        shell: cmd
+      - name: Install VS2015 C++ Build Tools
+        shell: pwsh
         run: |
-          msbuild src\psiclient2015.sln /t:ValidateSolutionConfiguration /v:minimal
+          $vsInstaller = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vs_installer.exe"
+
+          Write-Host "Installing MSVC v140..."
+
+          & $vsInstaller modify `
+            --installPath "C:\Program Files\Microsoft Visual Studio\2022\Enterprise" `
+            --add Microsoft.VisualStudio.Component.VC.140 `
+            --quiet `
+            --wait `
+            --norestart
+
+          if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 3010) {
+            throw "VS Installer failed with exit code $LASTEXITCODE"
+          }
+
+      - name: Verify v140
+        shell: pwsh
+        run: |
+          $path = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC"
+          Get-ChildItem $path -Directory | Select-Object Name
 
       - name: Build
         shell: cmd
@@ -31,6 +50,7 @@ jobs:
         shell: pwsh
         run: |
           Write-Host "Searching for built EXE files..."
+
           Get-ChildItem -Recurse -Filter *.exe |
             Where-Object {
               $_.Name -ne "psiphon-tunnel-core.exe"

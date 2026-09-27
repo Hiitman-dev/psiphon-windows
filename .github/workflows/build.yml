@@ -17,13 +17,20 @@ jobs:
       - name: Setup MSBuild
         uses: microsoft/setup-msbuild@v2
 
-      - name: Build
+      - name: Show Solution Configurations
+        shell: cmd
         run: |
-          msbuild src\psiclient2015.sln /m /p:Configuration=Release /p:Platform=x64
+          msbuild src\psiclient2015.sln /t:ValidateSolutionConfiguration /v:minimal
+
+      - name: Build
+        shell: cmd
+        run: |
+          msbuild src\psiclient2015.sln /m /p:Configuration=Release
 
       - name: Find EXE
         shell: pwsh
         run: |
+          Write-Host "Searching for built EXE files..."
           Get-ChildItem -Recurse -Filter *.exe |
             Where-Object {
               $_.Name -ne "psiphon-tunnel-core.exe"
@@ -33,8 +40,8 @@ jobs:
       - name: Upload build
         uses: actions/upload-artifact@v4
         with:
-          name: Psiphon-Windows-x64
+          name: Psiphon-Windows-Custom
           path: |
             **/Release/*.exe
-            **/x64/Release/*.exe
+            **/Release/**/*.exe
           if-no-files-found: warn

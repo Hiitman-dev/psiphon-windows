@@ -41,6 +41,11 @@ jobs:
           $path = "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC"
           Get-ChildItem $path -Directory | Select-Object Name
 
+      - name: Prepare embeddedvalues.h
+        shell: pwsh
+        run: |
+          Copy-Item src\embeddedvalues.h.stub src\embeddedvalues.h
+
       - name: Build
         shell: cmd
         run: |
